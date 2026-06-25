@@ -4,6 +4,8 @@ import conexion.ConexionBD;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -101,8 +103,7 @@ public class ActualizarLibroFrame
         btnActualizar.addActionListener(e -> {
 
             try {
-                Connection con =
-                        ConexionBD.conectar();
+                Connection con = ConexionBD.conectar();
 
                 // CATEGORIA A ID
                 int idCategoria = 1;
@@ -141,11 +142,8 @@ public class ActualizarLibroFrame
                 PreparedStatement ps = con.prepareStatement(sql);
 
                 ps.setString(1,txtTitulo.getText());
-
                 ps.setString(2,txtAutor.getText());
-
                 ps.setInt(3,idCategoria);
-
                 ps.setString(4,txtBuscar.getText());
 
                 int filas = ps.executeUpdate();
@@ -158,6 +156,16 @@ public class ActualizarLibroFrame
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
+            }
+        });
+
+        txtBuscar.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    btnBuscar.doClick();
+                    btnActualizar.doClick();
+                }
             }
         });
         setVisible(true);
