@@ -92,7 +92,7 @@ public class AdminFrame extends JFrame {
         RoundedButton btnReportes = createBotonMenuConIcono("  Reportes", "/imagenes/reportes.png", 460);
         RoundedButton btnCerrar = new RoundedButton("Cerrar sesión");
         
-        btnCerrar.setBounds(35, 630, 240, 45);
+        btnCerrar.setBounds(35, 580, 240, 45);
         btnCerrar.setBackground(MARRON_TEXTO_Y_BOTONES);
         btnCerrar.setForeground(Color.WHITE);
         btnCerrar.setFont(new Font("Arial", Font.BOLD, 16));
