@@ -10,159 +10,93 @@ import java.sql.ResultSet;
 
 public class RegistrarUsuarioFrame extends JFrame {
 
-    public RegistrarUsuarioFrame() {
+    public RegistrarUsuarioFrame(String rol) {
 
-        setTitle("Registrar Estudiante");
-
+        setTitle("Registrar " + rol);
         setSize(450,350);
-
         setLocationRelativeTo(null);
+        setLayout(new GridLayout(5,2,10,10));
 
-        setLayout(
-                new GridLayout(
-                        5,
-                        2,
-                        10,
-                        10
-                )
-        );
+        JTextField txtNombre = new JTextField();
+        JTextField txtCarrera = new JTextField();
+        JPasswordField txtPassword = new JPasswordField();
 
-        // CAMPOS
-        JTextField txtNombre =
-                new JTextField();
-
-        JTextField txtCarrera =
-                new JTextField();
-
-        JPasswordField txtPassword =
-                new JPasswordField();
-
-        JButton btnRegistrar =
-                new JButton("Registrar");
-
-        // COMPONENTES
+        JButton btnRegistrar = new JButton("Registrar");
+        JButton btnVolver = new JButton("Volver");
 
         add(new JLabel("Nombre"));
         add(txtNombre);
 
-        add(new JLabel("Carrera"));
-        add(txtCarrera);
+        if(rol.equals("Estudiante")){
+            add(new JLabel("Carrera"));
+            add(txtCarrera);
+        }else{
+            add(new JLabel(""));
+            add(new JLabel(""));
+        }
 
         add(new JLabel("Contraseña"));
         add(txtPassword);
 
-        add(new JLabel(""));
+        add(btnVolver);
         add(btnRegistrar);
 
-        // EVENTO
+        btnRegistrar.addActionListener(e->{
+            try{
+                Connection con = ConexionBD.conectar();
 
-        btnRegistrar.addActionListener(e -> {
+                String nombre = txtNombre.getText();
+                String password = String.valueOf(txtPassword.getPassword());
 
-            try {
-
-                Connection con =
-                        ConexionBD.conectar();
-
-                String nombre =
-                        txtNombre.getText();
-
-                String password =
-                        String.valueOf(
-                                txtPassword.getPassword()
-                        );
-
-                String carrera =
-                        txtCarrera.getText();
-
-                // ========================
-                // INSERTAR EN USUARIOS
-                // ========================
-
+                int idRol = 0;
+                switch(rol){
+                    case "Administrador":
+                        idRol = 1;
+                        break;
+                    case "Bibliotecario":
+                        idRol = 2;
+                        break;
+                    case "Estudiante":
+                        idRol = 3;
+                        break;
+                }
                 String sqlUsuario =
-
-                        "INSERT INTO usuarios "
-                        + "(nombre,contrasena,id_rol) "
-                        + "VALUES (?,?,3) "
-                        + "RETURNING id_usuario";
-
-                PreparedStatement psUsuario =
-                        con.prepareStatement(
-                                sqlUsuario
-                        );
-
-                psUsuario.setString(
-                        1,
-                        nombre
-                );
-
-                psUsuario.setString(
-                        2,
-                        password
-                );
-
-                ResultSet rs =
-                        psUsuario.executeQuery();
+                        "INSERT INTO usuarios(nombre,contrasena,id_rol) "
+                      + "VALUES(?,?,?) RETURNING id_usuario";
+                
+                PreparedStatement psUsuario = con.prepareStatement(sqlUsuario);
+                psUsuario.setString(1,nombre);
+                psUsuario.setString(2,password);
+                psUsuario.setInt(3,idRol);
+                ResultSet rs = psUsuario.executeQuery();
 
                 int idUsuario = 0;
-
-                if (rs.next()) {
-
-                    idUsuario =
-                            rs.getInt(
-                                    "id_usuario"
-                            );
+                if(rs.next()){
+                    idUsuario = rs.getInt("id_usuario");
                 }
-
-                // ========================
-                // INSERTAR EN ESTUDIANTES
-                // ========================
-
-                String sqlEstudiante =
-
-                        "INSERT INTO estudiantes "
-                        + "(nombre,carrera,id_usuario) "
-                        + "VALUES (?,?,?)";
-
-                PreparedStatement psEstudiante =
-                        con.prepareStatement(
-                                sqlEstudiante
-                        );
-
-                psEstudiante.setString(
-                        1,
-                        nombre
-                );
-
-                psEstudiante.setString(
-                        2,
-                        carrera
-                );
-
-                psEstudiante.setInt(
-                        3,
-                        idUsuario
-                );
-
-                psEstudiante.executeUpdate();
-
-                JOptionPane.showMessageDialog(
-                        null,
-                        "Estudiante registrado correctamente"
-                );
-
+                if(rol.equals("Estudiante")){
+                    String sqlEstudiante =
+                            "INSERT INTO estudiantes(nombre,carrera,id_usuario) "
+                          + "VALUES(?,?,?)";
+                    PreparedStatement psEstudiante = con.prepareStatement(sqlEstudiante);
+                    psEstudiante.setString(1,nombre);
+                    psEstudiante.setString(2,txtCarrera.getText());
+                    psEstudiante.setInt(3,idUsuario);
+                    psEstudiante.executeUpdate();
+                }
+                JOptionPane.showMessageDialog(null,rol + " registrado correctamente");
                 dispose();
 
-            } catch (Exception ex) {
-
+            }catch(Exception ex){
                 ex.printStackTrace();
-
                 JOptionPane.showMessageDialog(
                         null,
-                        "Error al registrar estudiante"
-                );
+                        "Error al registrar " + rol);
             }
         });
-
+        btnVolver.addActionListener(e ->{
+            dispose();
+        });
         setVisible(true);
     }
 }
