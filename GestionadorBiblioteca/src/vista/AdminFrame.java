@@ -187,13 +187,13 @@ public class AdminFrame extends JFrame {
         //=========================
         btnUsuarios.addActionListener(e -> { dispose(); new UsuariosFrame(); });
         btnLibros.addActionListener(e -> { dispose(); new LibrosFrame(); });
-        btnHistorial.addActionListener(e -> { dispose(); new PrestamosFrame(); });
+        btnHistorial.addActionListener(e -> { dispose(); new HistorialFrame(); });
         btnMultas.addActionListener(e -> { dispose(); new MultasFrame(); });
         btnReportes.addActionListener(e -> { dispose(); new ReportesFrame(); });
 
         cardUsuarios.addActionListener(e -> { dispose(); new UsuariosFrame(); });
         cardLibros.addActionListener(e -> { dispose(); new LibrosFrame(); });
-        cardHistorial.addActionListener(e -> { dispose(); new PrestamosFrame(); });
+        cardHistorial.addActionListener(e -> { dispose(); new HistorialFrame(); });
         cardMultas.addActionListener(e -> { dispose(); new MultasFrame(); });
         cardReportes.addActionListener(e -> { dispose(); new ReportesFrame(); });
 
