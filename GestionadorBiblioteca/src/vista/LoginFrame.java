@@ -108,7 +108,10 @@ public class LoginFrame extends JFrame {
                             break;
                         case "Estudiante":
                             int idEstudiante = rs.getInt("id_estudiante");
-                            new EstudianteFrame(idEstudiante);
+                            // Extraemos el nombre de la base de datos (ajusta "nombre" al campo real de tu tabla)
+                            String nombreEstudiante = rs.getString("nombre"); 
+                           
+                            new EstudianteFrame(nombreEstudiante, idEstudiante);
                             break;
                         default:
                             JOptionPane.showMessageDialog(null, "Rol no reconocido");
