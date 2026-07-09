@@ -3,39 +3,41 @@ package vista;
 import componentes.BackgroundPanel;
 import componentes.RoundedButton;
 import componentes.RoundedPanel;
+import modelo.Prestamo;
 import conexion.ConexionBD;
 
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
-import java.awt.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import javax.swing.table.DefaultTableModel;
+import java.time.LocalDate;
+import javax.swing.*;
+import java.awt.*;
 
-public class DevolucionFrame extends JFrame {
+public class RegistrarPrestamosFrame extends JFrame {
 
     private static final long serialVersionUID = 1L;
 
     private final Color MARRON = new Color(92, 43, 5);
     private final Color MARRON_CLARO = new Color(188, 102, 45);
 
-    private JTextField txtNombre;
+    private JTextField txtEstudiante;
     private JTextField txtLibro;
+
     private JTable tabla;
     private JScrollPane scroll;
 
-    private RoundedButton btnDevolver;
+    private RoundedButton btnRegistrar;
     private RoundedButton btnVolver;
     
-    // Referencia de la ventana principal para evitar duplicidad de interfaces
+    // Almacena la referencia de PrestamoFrame
     private JFrame ventanaPadre;
 
     // Modificado el constructor para recibir el JFrame padre
-    public DevolucionFrame(JFrame padre) {
+    public RegistrarPrestamosFrame(JFrame padre) {
         this.ventanaPadre = padre;
 
-        setTitle("Registrar Devolución");
+        setTitle("Registrar Préstamos");
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setMinimumSize(new Dimension(1366, 768));
         setLocationRelativeTo(null);
@@ -48,11 +50,11 @@ public class DevolucionFrame extends JFrame {
         RoundedPanel panelPrincipal = new RoundedPanel();
         panelPrincipal.setLayout(null);
         panelPrincipal.setBackground(new Color(255, 255, 255, 235));
-        panelPrincipal.setPreferredSize(new Dimension(1200, 680));
+        panelPrincipal.setPreferredSize(new Dimension(1080, 620));
         fondo.add(panelPrincipal);
 
         //==================================================
-        // BOTÓN VOLVER 
+        // BOTÓN VOLVER
         //==================================================
         btnVolver = new RoundedButton(" VOLVER");
         btnVolver.setBounds(25, 25, 180, 45);
@@ -67,78 +69,76 @@ public class DevolucionFrame extends JFrame {
             
             java.awt.image.BufferedImage imagenInvertida = new java.awt.image.BufferedImage(ancho, alto, java.awt.image.BufferedImage.TYPE_INT_ARGB);
             Graphics2D g2d = imagenInvertida.createGraphics();
+            
             g2d.drawImage(iconoOriginal.getImage(), ancho, 0, 0, alto, 0, 0, iconoOriginal.getIconWidth(), iconoOriginal.getIconHeight(), null);
             g2d.dispose();
             
             btnVolver.setIcon(new ImageIcon(imagenInvertida));
         } catch (Exception e) {
-            btnVolver.setText(" VOLVER");
+            btnVolver.setText("<- VOLVER");
         }
         panelPrincipal.add(btnVolver);
 
         //==================================================
-        // ICONO SUPERIOR (devolucion.png)
+        // ICONO SUPERIOR
         //==================================================
         try {
-            ImageIcon icono = new ImageIcon(getClass().getResource("/imagenes/devolucion.png"));
+            ImageIcon icono = new ImageIcon(getClass().getResource("/imagenes/prestamo.png"));
             Image img = icono.getImage().getScaledInstance(110, 110, Image.SCALE_SMOOTH);
             JLabel lblIcono = new JLabel(new ImageIcon(img));
-            lblIcono.setBounds(545, 15, 110, 110);
+            lblIcono.setBounds(485, 15, 110, 110);
             panelPrincipal.add(lblIcono);
         } catch (Exception e) {
-            JLabel lbl = new JLabel("📦");
+            JLabel lbl = new JLabel("📋");
             lbl.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 70));
-            lbl.setBounds(550, 20, 100, 100);
+            lbl.setBounds(500, 20, 100, 100);
             panelPrincipal.add(lbl);
         }
 
         JPanel linea = new JPanel();
         linea.setBackground(MARRON);
-        linea.setBounds(30, 135, 1140, 4);
+        linea.setBounds(10, 135, 1060, 5);
         panelPrincipal.add(linea);
 
         //==================================================
         // TÍTULO Y DESCRIPCIÓN
         //==================================================
-        JLabel lblTitulo = new JLabel("Registrar devolución");
-        lblTitulo.setFont(new Font("Georgia", Font.BOLD, 38));
+        JLabel lblTitulo = new JLabel("Registrar Préstamos");
+        lblTitulo.setFont(new Font("Arial", Font.BOLD, 38));
         lblTitulo.setForeground(MARRON);
         lblTitulo.setHorizontalAlignment(SwingConstants.CENTER);
-        lblTitulo.setBounds(0, 155, 1200, 45);
+        lblTitulo.setBounds(0, 155, 1080, 45);
         panelPrincipal.add(lblTitulo);
 
-        JLabel lblDescripcion = new JLabel("Escribir el nombre del estudiante y del libro que debe devolver.");
+        JLabel lblDescripcion = new JLabel("Escribir el nombre del estudiante y del libro que tomó prestado.");
         lblDescripcion.setFont(new Font("Arial", Font.BOLD, 18));
-        lblDescripcion.setForeground(Color.BLACK);
-        lblDescripcion.setBounds(85, 220, 700, 30);
+        lblDescripcion.setBounds(55, 220, 700, 30);
         panelPrincipal.add(lblDescripcion);
 
         //==================================================
-        // CAMPOS DE TEXTO
+        // CAMPOS DE TEXTO (ESTUDIANTE Y LIBRO)
         //==================================================
         JLabel lblEstudiante = new JLabel("Nombre del estudiante:");
         lblEstudiante.setFont(new Font("Arial", Font.BOLD, 18));
-        lblEstudiante.setForeground(Color.BLACK);
-        lblEstudiante.setBounds(85, 275, 250, 30);
+        lblEstudiante.setBounds(55, 275, 250, 30);
         panelPrincipal.add(lblEstudiante);
 
-        txtNombre = new RoundedTextField();
-        txtNombre.setBounds(300, 270, 815, 42);
-        txtNombre.setBackground(MARRON_CLARO);
-        txtNombre.setForeground(Color.WHITE);
-        txtNombre.setCaretColor(Color.WHITE);
-        txtNombre.setBorder(BorderFactory.createEmptyBorder(5, 20, 5, 20));
-        txtNombre.setFont(new Font("Arial", Font.BOLD, 18));
-        panelPrincipal.add(txtNombre);
+        txtEstudiante = new RoundedTextField();
+        txtEstudiante.setBounds(270, 270, 780, 42);
+        txtEstudiante.setBackground(MARRON_CLARO);
+        txtEstudiante.setForeground(Color.WHITE);
+        txtEstudiante.setCaretColor(Color.WHITE);
+        txtEstudiante.setBorder(BorderFactory.createEmptyBorder(5, 20, 5, 20));
+        txtEstudiante.setFont(new Font("Arial", Font.BOLD, 18));
+        panelPrincipal.add(txtEstudiante);
 
-        JLabel lblLibro = new JLabel("Libro devuelto:");
+        JLabel lblLibro = new JLabel("Libro prestado:");
         lblLibro.setFont(new Font("Arial", Font.BOLD, 18));
-        lblLibro.setForeground(Color.BLACK);
-        lblLibro.setBounds(85, 325, 200, 30);
+        lblLibro.setBounds(55, 325, 200, 30);
         panelPrincipal.add(lblLibro);
 
         txtLibro = new RoundedTextField();
-        txtLibro.setBounds(235, 320, 880, 42);
+        txtLibro.setBounds(270, 320, 780, 42);
         txtLibro.setBackground(MARRON_CLARO);
         txtLibro.setForeground(Color.WHITE);
         txtLibro.setCaretColor(Color.WHITE);
@@ -147,51 +147,48 @@ public class DevolucionFrame extends JFrame {
         panelPrincipal.add(txtLibro);
 
         //==================================================
-        // BOTÓN REGISTRAR DEVOLUCIÓN
+        // BOTÓN REGISTRAR
         //==================================================
-        btnDevolver = new RoundedButton("Registrar devolución");
-        btnDevolver.setBounds(490, 385, 220, 42);
-        btnDevolver.setBackground(new Color(245, 155, 95));
-        btnDevolver.setForeground(Color.BLACK);
-        btnDevolver.setFont(new Font("Arial", Font.BOLD, 16));
-        panelPrincipal.add(btnDevolver);
+        btnRegistrar = new RoundedButton("Registrar préstamo");
+        btnRegistrar.setBounds(430, 390, 220, 42);
+        btnRegistrar.setBackground(new Color(245, 155, 95));
+        btnRegistrar.setForeground(Color.BLACK);
+        btnRegistrar.setFont(new Font("Arial", Font.BOLD, 16));
+        panelPrincipal.add(btnRegistrar);
 
         //==================================================
         // CONFIGURACIÓN DE LA TABLA
         //==================================================
-        String columnas[] = {"ID Libro", "Estudiante", "Libro devuelto", "Fecha de préstamos"};
+        String columnas[] = {"ID Préstamo", "Estudiante", "Libro", "Estado", "Fecha de préstamo"};
         tabla = new JTable();
         tabla.setModel(new DefaultTableModel(new Object[][]{}, columnas));
-        tabla.setRowHeight(30);
+        tabla.setRowHeight(28);
         tabla.setFont(new Font("Arial", Font.PLAIN, 15));
-        
-        JTableHeader header = tabla.getTableHeader();
-        header.setFont(new Font("Arial", Font.BOLD, 16));
-        header.setBackground(new Color(245, 237, 225));
-        header.setForeground(Color.BLACK);
+        tabla.getTableHeader().setFont(new Font("Arial", Font.BOLD, 16));
+        tabla.getTableHeader().setBackground(Color.WHITE);
+        tabla.getTableHeader().setForeground(MARRON);
+        tabla.setSelectionBackground(new Color(220, 190, 160));
 
         scroll = new JScrollPane(tabla);
-        scroll.setBounds(85, 450, 1030, 180);
+        scroll.setBounds(55, 455, 995, 120);
         panelPrincipal.add(scroll);
 
         //==================================================
-        // EVENTOS Y LÓGICA DE RETORNO CONTROLADO (Modificado)
+        // EVENTOS (Modificado para usar ventanaPadre)
         //==================================================
         btnVolver.addActionListener(e -> {
-            dispose(); // Destruye el formulario de devoluciones
+            dispose(); // Destruye esta ventana de registro
             if (ventanaPadre != null) {
-                ventanaPadre.setVisible(true); // Reaparece el menú original limpio
+                ventanaPadre.setVisible(true); // Vuelve a mostrar PrestamoFrame original
             }
         });
-
-        // Al presionar Enter en Estudiante saltará a Libro
-        txtNombre.addActionListener(e -> txtLibro.requestFocusInWindow());
-
-        // Al presionar Enter en Libro registrará de inmediato la devolución
-        txtLibro.addActionListener(e -> btnDevolver.doClick());
-
-        btnDevolver.addActionListener(e -> {
-            String estudiante = txtNombre.getText().trim();
+        
+        txtEstudiante.addActionListener(e -> txtLibro.requestFocusInWindow());
+        txtEstudiante.addActionListener(e -> btnRegistrar.doClick());
+        txtLibro.addActionListener(e -> btnRegistrar.doClick());
+        
+        btnRegistrar.addActionListener(e -> {
+            String estudiante = txtEstudiante.getText().trim();
             String libro = txtLibro.getText().trim();
 
             if (estudiante.isEmpty() || libro.isEmpty()) {
@@ -203,103 +200,106 @@ public class DevolucionFrame extends JFrame {
                 Connection con = ConexionBD.conectar();
 
                 // Buscar estudiante
-                String buscarEstudiante = "SELECT id_estudiante FROM estudiantes WHERE LOWER(nombre)=LOWER(?)";
-                PreparedStatement psBuscarEstudiante = con.prepareStatement(buscarEstudiante);
-                psBuscarEstudiante.setString(1, estudiante);
-                ResultSet rsEstudiante = psBuscarEstudiante.executeQuery();
-                
-                if (!rsEstudiante.next()) {
-                    JOptionPane.showMessageDialog(null, "Estudiante no encontrado");
+                String sqlEstudiante = "SELECT id_estudiante FROM estudiantes WHERE LOWER(nombre)=LOWER(?)";
+                PreparedStatement psEst = con.prepareStatement(sqlEstudiante);
+                psEst.setString(1, estudiante);
+                ResultSet rsEst = psEst.executeQuery();
+
+                if (!rsEst.next()) {
+                    JOptionPane.showMessageDialog(null, "El estudiante no existe.");
                     return;
                 }
-                int idEstudiante = rsEstudiante.getInt("id_estudiante");
+                int idEstudiante = rsEst.getInt("id_estudiante");
 
                 // Buscar libro
-                String buscarLibro = "SELECT id_libro FROM libros WHERE LOWER(titulo)=LOWER(?)";
-                PreparedStatement psBuscarLibro = con.prepareStatement(buscarLibro);
-                psBuscarLibro.setString(1, libro);
-                ResultSet rsLibro = psBuscarLibro.executeQuery();
+                String sqlLibro = "SELECT id_libro, disponible FROM libros WHERE LOWER(titulo)=LOWER(?)";
+                PreparedStatement psLibro = con.prepareStatement(sqlLibro);
+                psLibro.setString(1, libro);
+                ResultSet rsLibro = psLibro.executeQuery();
 
                 if (!rsLibro.next()) {
-                    JOptionPane.showMessageDialog(null, "Libro no encontrado");
+                    JOptionPane.showMessageDialog(null, "El libro no existe.");
                     return;
                 }
                 int idLibro = rsLibro.getInt("id_libro");
+                boolean disponible = rsLibro.getBoolean("disponible");
 
-                // Validar si existe préstamo ACTIVO para ese estudiante y libro
-                String validar = "SELECT id_prestamo FROM prestamos WHERE id_estudiante=? AND id_libro=? AND estado='ACTIVO'";
-                PreparedStatement psValidar = con.prepareStatement(validar);
-                psValidar.setInt(1, idEstudiante);
-                psValidar.setInt(2, idLibro);
-                ResultSet rsPrestamo = psValidar.executeQuery();
-
-                if (!rsPrestamo.next()) {
-                    JOptionPane.showMessageDialog(null, "Ese estudiante no tiene ese libro en préstamo activo");
+                if (!disponible) {
+                    JOptionPane.showMessageDialog(null, "El libro ya está prestado.");
                     return;
                 }
-                int idPrestamo = rsPrestamo.getInt("id_prestamo");
 
-                // Actualizar estado del préstamo a 'Devuelto'
-                String actualizarPrestamo = "UPDATE prestamos SET estado='Devuelto' WHERE id_prestamo=?";
-                PreparedStatement psActualizarPrestamo = con.prepareStatement(actualizarPrestamo);
-                psActualizarPrestamo.setInt(1, idPrestamo);
-                psActualizarPrestamo.executeUpdate();
+                // Registrar préstamo
+                String sqlPrestamo = "INSERT INTO prestamos(id_estudiante,id_libro,fecha_prestamo,estado) VALUES(?,?,?,?)";
+                PreparedStatement psPrestamo = con.prepareStatement(sqlPrestamo);
+                psPrestamo.setInt(1, idEstudiante);
+                psPrestamo.setInt(2, idLibro);
+                psPrestamo.setDate(3, java.sql.Date.valueOf(LocalDate.now()));
+                psPrestamo.setString(4, "ACTIVO");
+                psPrestamo.executeUpdate();
+                
+                // Cambiar disponibilidad del libro
+                String sqlActualizar = "UPDATE libros SET disponible=false WHERE id_libro=?";
+                PreparedStatement psActualizar = con.prepareStatement(sqlActualizar);
+                psActualizar.setInt(1, idLibro);
+                psActualizar.executeUpdate();
 
-                // Cambiar disponibilidad del libro a true
-                String update = "UPDATE libros SET disponible=true WHERE id_libro=?";
-                PreparedStatement psUpdate = con.prepareStatement(update);
-                psUpdate.setInt(1, idLibro);
-                psUpdate.executeUpdate();
-
-                JOptionPane.showMessageDialog(null, "Devolución registrada correctamente.");
-                txtNombre.setText("");
+                JOptionPane.showMessageDialog(null, "Préstamo registrado correctamente.");
+                txtEstudiante.setText("");
                 txtLibro.setText("");
 
                 cargarTabla();
-                con.close();
 
             } catch (Exception ex) {
                 ex.printStackTrace();
-                JOptionPane.showMessageDialog(null, "Error al registrar la devolución.");
+                JOptionPane.showMessageDialog(null, "Error al registrar préstamo.");
             }
         });
 
+        // Cargar los registros en la tabla automáticamente al abrir la ventana
         cargarTabla();
         setVisible(true);
     }
 
+    //==================================================
+    // MÉTODOS DE SOPORTE
+    //==================================================
     private void cargarTabla() {
         DefaultTableModel modelo = (DefaultTableModel) tabla.getModel();
         modelo.setRowCount(0);
 
         try {
             Connection con = ConexionBD.conectar();
-            String sql = "SELECT l.id_libro, e.nombre AS estudiante, l.titulo AS libro, p.fecha_prestamo " +
-                         "FROM prestamos p " +
-                         "INNER JOIN estudiantes e ON p.id_estudiante = e.id_estudiante " +
-                         "INNER JOIN libros l ON p.id_libro = l.id_libro " +
-                         "WHERE p.estado = 'Devuelto' " +
-                         "ORDER BY p.id_prestamo DESC";
+            String sql = "SELECT p.id_prestamo, " +
+                    "e.nombre AS estudiante, " +
+                    "l.titulo AS libro, " +
+                    "p.estado, " +
+                    "p.fecha_prestamo " +
+                    "FROM prestamos p " +
+                    "INNER JOIN estudiantes e ON p.id_estudiante = e.id_estudiante " +
+                    "INNER JOIN libros l ON p.id_libro = l.id_libro " +
+                    "ORDER BY p.id_prestamo ASC";
 
             PreparedStatement ps = con.prepareStatement(sql);
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
                 modelo.addRow(new Object[]{
-                        rs.getInt("id_libro"),
+                        rs.getInt("id_prestamo"),
                         rs.getString("estudiante"),
                         rs.getString("libro"),
+                        rs.getString("estado"),
                         rs.getDate("fecha_prestamo")
                 });
             }
-            con.close();
         } catch (Exception ex) {
             ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "No se pudieron cargar los préstamos.");
         }
     }
 
     //==================================================
-    // CLASE INTERNA PARA EL CAMPO REDONDEADO
+    // CLASE INTERNA
     //==================================================
     private class RoundedTextField extends JTextField {
         private static final long serialVersionUID = 1L;

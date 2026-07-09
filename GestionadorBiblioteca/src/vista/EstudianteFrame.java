@@ -51,7 +51,7 @@ public class EstudianteFrame extends JFrame {
         // EVENTOS
 
         btnCatalogo.addActionListener(e -> new CatalogoFrame());
-        btnBuscar.addActionListener(e ->new BuscarLibroFrame());
+        btnBuscar.addActionListener(e ->new BuscarLibroFrame(this));
         btnHistorial.addActionListener(e -> new HistorialFrameEstudiante(idEstudiante));
         btnEstado.addActionListener(e -> new EstadoPrestamosFrame(idEstudiante));
         btnMultas.addActionListener(e ->new MultasPendientesFrame(idEstudiante));

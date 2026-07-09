@@ -23,8 +23,7 @@ public class Prestamo {
         this.idPrestamo = idPrestamo;
         this.estudiante = estudiante;
         this.libro = libro;
-        this.fechaPrestamo =
-                fechaPrestamo;
+        this.fechaPrestamo = fechaPrestamo;
     }
 
     // GETTERS Y SETTERS
