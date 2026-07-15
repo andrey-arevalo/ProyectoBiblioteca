@@ -161,7 +161,7 @@ public class BuscarLibroFrame extends JFrame {
         panelPrincipal.add(scroll);
 
         //==================================================
-        // EVENTOS Y LÓGICA DE FUNCIONAMIENTO (Modificado)
+        // EVENTOS Y LÓGICA DE FUNCIONAMIENTO
         //==================================================
         btnVolver.addActionListener(e -> {
             dispose(); // Destruye esta ventana secundaria
@@ -173,45 +173,58 @@ public class BuscarLibroFrame extends JFrame {
         // Evento para que funcione la tecla ENTER en el buscador
         txtBuscar.addActionListener(e -> btnBuscar.doClick());
 
-        // Lógica del botón Buscar
+        // Lógica del botón Buscar (Si está vacío, recarga toda la lista)
         btnBuscar.addActionListener(e -> {
             String filtro = txtBuscar.getText().trim();
-            if (!filtro.isEmpty()) {
-                buscarLibros(filtro);
-            } else {
-                limpiarTodo();
-            }
+            buscarLibros(filtro);
         });
         
-        // Lógica del botón Limpiar (Borra tabla, texto y da el foco)
+        // Lógica del botón Limpiar (Restablece el campo de texto y vuelve a listar todo)
         btnLimpiar.addActionListener(e -> limpiarTodo());
         
-        // Al iniciar la pantalla la tabla aparece limpia sin registros
+        // Carga automática inicial de todos los libros al abrir la ventana
         limpiarTodo();
         setVisible(true);
     }
 
+    /**
+     * Limpia el cuadro de búsqueda y recarga el listado completo de libros
+     */
     private void limpiarTodo() {
         txtBuscar.setText("");
-        DefaultTableModel modelo = (DefaultTableModel) tabla.getModel();
-        modelo.setRowCount(0);
+        buscarLibros(""); // Carga de nuevo la totalidad de los libros registrados
         txtBuscar.requestFocusInWindow();
     }
 
+    /**
+     * Carga libros aplicando un filtro de búsqueda, o de forma general si está vacío
+     */
     private void buscarLibros(String tituloFiltro) {
         DefaultTableModel modelo = (DefaultTableModel) tabla.getModel();
         modelo.setRowCount(0);
 
         try {
             Connection con = ConexionBD.conectar();
-            String sql = "SELECT l.id_libro, l.titulo, l.autor, c.nombre AS categoria, l.disponible " +
-                         "FROM libros l " +
-                         "INNER JOIN categorias c ON l.id_categoria = c.id_categoria " +
-                         "WHERE LOWER(l.titulo) LIKE LOWER(?) " +
-                         "ORDER BY l.id_libro ASC";
+            String sql;
+            PreparedStatement ps;
 
-            PreparedStatement ps = con.prepareStatement(sql);
-            ps.setString(1, "%" + tituloFiltro + "%");
+            // MEJORA: Si no hay filtro, extrae todos los libros ordenados secuencialmente
+            if (tituloFiltro == null || tituloFiltro.isEmpty()) {
+                sql = "SELECT l.id_libro, l.titulo, l.autor, c.nombre AS categoria, l.disponible " +
+                      "FROM libros l " +
+                      "INNER JOIN categorias c ON l.id_categoria = c.id_categoria " +
+                      "ORDER BY l.id_libro ASC";
+                ps = con.prepareStatement(sql);
+            } else {
+                sql = "SELECT l.id_libro, l.titulo, l.autor, c.nombre AS categoria, l.disponible " +
+                      "FROM libros l " +
+                      "INNER JOIN categorias c ON l.id_categoria = c.id_categoria " +
+                      "WHERE LOWER(l.titulo) LIKE LOWER(?) " +
+                      "ORDER BY l.id_libro ASC";
+                ps = con.prepareStatement(sql);
+                ps.setString(1, "%" + tituloFiltro + "%");
+            }
+
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
@@ -223,10 +236,13 @@ public class BuscarLibroFrame extends JFrame {
                         rs.getBoolean("disponible") ? "Sí" : "No" // Formato amigable para el usuario
                 });
             }
+            
+            rs.close();
+            ps.close();
             con.close();
         } catch (Exception ex) {
             ex.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Error al realizar la búsqueda del libro.");
+            JOptionPane.showMessageDialog(this, "Error al realizar la carga/búsqueda de los libros.");
         }
     }
 

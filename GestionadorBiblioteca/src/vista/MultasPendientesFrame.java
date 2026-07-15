@@ -22,9 +22,10 @@ public class MultasPendientesFrame extends JFrame {
     private JTable tabla;
     private DefaultTableModel modelo;
     private EstudianteFrame ventanaPadre;
-    private JLabel lblMontoValor; // Barra marrón que mostrará el monto dinámico
+    private JLabel lblMontoValor; 
+    private JComboBox<String> comboMetodos;
 
-    // Paleta de colores exacta basada en el mockup
+    // Paleta de colores exacta
     private final Color MARRON_OSCURO = new Color(92, 43, 5);
     private final Color COLOR_CREMA_CABECERA = new Color(245, 232, 212);
     private final Color COLOR_TEXTO_CABECERA = new Color(40, 20, 3);
@@ -39,19 +40,17 @@ public class MultasPendientesFrame extends JFrame {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-        // 1. Fondo escalable de la biblioteca
         BackgroundPanel fondo = new BackgroundPanel("/imagenes/bibliotecafondo.jpg");
         fondo.setLayout(new GridBagLayout());
         setContentPane(fondo);
 
-        // 2. Panel contenedor principal (Blanco translúcido con bordes redondeados)
         RoundedPanel panelContenedor = new RoundedPanel();
         panelContenedor.setLayout(null);
         panelContenedor.setBackground(new Color(255, 255, 255, 240));
         panelContenedor.setPreferredSize(new Dimension(1200, 680));
         fondo.add(panelContenedor);
 
-        // 3. Botón Volver con la imagen 'flecha_derecha.png' invertida por software
+        // Botón Volver con flecha invertida
         RoundedButton btnVolver = new RoundedButton("VOLVER");
         btnVolver.setBounds(30, 25, 175, 45);
         btnVolver.setBackground(MARRON_OSCURO);
@@ -77,7 +76,7 @@ public class MultasPendientesFrame extends JFrame {
         }
         panelContenedor.add(btnVolver);
 
-        // 4. Icono Central de Multas (multa.png o signo de dólar del mockup)
+        // Icono Central de Dólar/Multas
         try {
             ImageIcon iconMulta = new ImageIcon(getClass().getResource("/imagenes/multa.png"));
             Image img = iconMulta.getImage().getScaledInstance(75, 80, Image.SCALE_SMOOTH);
@@ -92,20 +91,18 @@ public class MultasPendientesFrame extends JFrame {
             panelContenedor.add(lblFallback);
         }
 
-        // 5. Línea divisoria superior marrón oscuro
         JPanel lineaSuperior = new JPanel();
         lineaSuperior.setBackground(MARRON_OSCURO);
         lineaSuperior.setBounds(30, 110, 1140, 5);
         panelContenedor.add(lineaSuperior);
 
-        // 6. Título: Visualizar multas pendientes
         JLabel lblTitulo = new JLabel("Visualizar multas pendientes", SwingConstants.CENTER);
         lblTitulo.setFont(new Font("Georgia", Font.BOLD, 36));
         lblTitulo.setForeground(MARRON_OSCURO);
         lblTitulo.setBounds(0, 130, 1200, 45);
         panelContenedor.add(lblTitulo);
 
-        // 7. Configuración de la Tabla y Columnas exactas del Mockup
+        // Tabla
         String[] columnas = { "ID Multa", "Fecha Préstamo", "Estudiante", "Libro", "Monto", "Estado", "Fecha de pago" };
         modelo = new DefaultTableModel(columnas, 0) {
             private static final long serialVersionUID = 1L;
@@ -121,7 +118,6 @@ public class MultasPendientesFrame extends JFrame {
         tabla.setGridColor(MARRON_OSCURO);
         tabla.setShowGrid(true);
 
-        // Estilizar las Cabeceras
         JTableHeader header = tabla.getTableHeader();
         header.setPreferredSize(new Dimension(header.getWidth(), 40));
         header.setBackground(COLOR_CREMA_CABECERA);
@@ -135,46 +131,42 @@ public class MultasPendientesFrame extends JFrame {
             tabla.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
         }
 
-        // Ajustar anchos proporcionales
-        tabla.getColumnModel().getColumn(0).setPreferredWidth(90);   // ID Multa
-        tabla.getColumnModel().getColumn(1).setPreferredWidth(140);  // Fecha Préstamo
-        tabla.getColumnModel().getColumn(2).setPreferredWidth(180);  // Estudiante
-        tabla.getColumnModel().getColumn(3).setPreferredWidth(300);  // Libro
-        tabla.getColumnModel().getColumn(4).setPreferredWidth(100);  // Monto
-        tabla.getColumnModel().getColumn(5).setPreferredWidth(110);  // Estado
-        tabla.getColumnModel().getColumn(6).setPreferredWidth(200);  // Fecha de pago
+        tabla.getColumnModel().getColumn(0).setPreferredWidth(90);
+        tabla.getColumnModel().getColumn(1).setPreferredWidth(140);
+        tabla.getColumnModel().getColumn(2).setPreferredWidth(180);
+        tabla.getColumnModel().getColumn(3).setPreferredWidth(300);
+        tabla.getColumnModel().getColumn(4).setPreferredWidth(100);
+        tabla.getColumnModel().getColumn(5).setPreferredWidth(110);
+        tabla.getColumnModel().getColumn(6).setPreferredWidth(200);
 
         JScrollPane scrollPane = new JScrollPane(tabla);
         scrollPane.setBounds(70, 200, 1060, 310);
         scrollPane.setBorder(BorderFactory.createLineBorder(MARRON_OSCURO, 1));
         panelContenedor.add(scrollPane);
 
-        // 8. TEXTO INFORMATIVO INFERIOR
         JLabel lblInfo = new JLabel("Elige el monto a pagar y presione el botón para pagar.");
         lblInfo.setFont(new Font("Arial", Font.BOLD, 18));
         lblInfo.setForeground(Color.BLACK);
         lblInfo.setBounds(70, 530, 600, 30);
         panelContenedor.add(lblInfo);
 
-        // 9. COMBOBOX DE MÉTODOS DE PAGO (Botón de categorías/elecciones naranja del mockup)
-        String[] opcionesPago = { " Métodos de pago", " BCP", " BBVA", " Plin", " Yape" };
-        JComboBox<String> comboMetodos = new JComboBox<>(opcionesPago);
+        // 1. Selector de Métodos de Pago
+        String[] opcionesPago = { "Métodos de pago", "BCP", "BBVA", "Plin", "Yape" };
+        comboMetodos = new JComboBox<>(opcionesPago);
         comboMetodos.setBounds(910, 530, 220, 40);
         comboMetodos.setBackground(NARANJA_METODOS);
         comboMetodos.setForeground(Color.BLACK);
         comboMetodos.setFont(new Font("Arial", Font.BOLD, 16));
-        // Truco visual para que parezca un botón plano redondeado como el mockup
         comboMetodos.setBorder(BorderFactory.createEmptyBorder());
         panelContenedor.add(comboMetodos);
 
-        // 10. SECCIÓN DEL MONTO SELECCIONADO (Barra larga marrón)
         JLabel lblMontoTxt = new JLabel("Monto:");
         lblMontoTxt.setFont(new Font("Arial", Font.BOLD, 22));
         lblMontoTxt.setForeground(Color.BLACK);
         lblMontoTxt.setBounds(70, 595, 100, 40);
         panelContenedor.add(lblMontoTxt);
 
-        // La barra contenedora marrón del monto
+        // Barra contenedora del monto
         lblMontoValor = new JLabel("  Seleccione una multa de la tabla...", SwingConstants.LEFT);
         lblMontoValor.setBounds(160, 595, 730, 40);
         lblMontoValor.setOpaque(true);
@@ -184,7 +176,6 @@ public class MultasPendientesFrame extends JFrame {
         lblMontoValor.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 0));
         panelContenedor.add(lblMontoValor);
 
-        // 11. BOTÓN PAGAR MULTA (Óvalo de la esquina inferior derecha)
         RoundedButton btnPagar = new RoundedButton("Pagar multa");
         btnPagar.setBounds(910, 595, 220, 40);
         btnPagar.setBackground(NARANJA_METODOS);
@@ -192,26 +183,45 @@ public class MultasPendientesFrame extends JFrame {
         btnPagar.setFont(new Font("Arial", Font.BOLD, 16));
         panelContenedor.add(btnPagar);
 
-        // ==================================================
-        // EVENTO: SELECCIONAR FILA DE LA TABLA
-        // ==================================================
-        tabla.getSelectionModel().addListSelectionListener(e -> {
+        // =====================================================================
+        // MEJORA 1: ACTUALIZACIÓN DINÁMICA DE LA BARRA SEGÚN EL MÉTODO DE PAGO
+        // =====================================================================
+        Runnable actualizarBarraDetalle = () -> {
             int fila = tabla.getSelectedRow();
-            if (fila != -1) {
-                String monto = tabla.getValueAt(fila, 4).toString();
-                String estado = tabla.getValueAt(fila, 5).toString();
-                
-                if(estado.equalsIgnoreCase("Pagada")) {
-                    lblMontoValor.setText("  S/. " + monto + " (Ya pagada)");
-                } else {
-                    lblMontoValor.setText("  S/. " + monto);
-                }
+            if (fila == -1) {
+                lblMontoValor.setText("  Seleccione una multa de la tabla...");
+                return;
+            }
+
+            String monto = tabla.getValueAt(fila, 4).toString();
+            String estado = tabla.getValueAt(fila, 5).toString();
+            String metodo = comboMetodos.getSelectedItem().toString();
+
+            if (estado.equalsIgnoreCase("Pagada")) {
+                lblMontoValor.setText("  S/. " + monto + " (Esta multa ya se encuentra PAGADA)");
+                return;
+            }
+
+            if (metodo.equals("Métodos de pago")) {
+                lblMontoValor.setText("  S/. " + monto + " | Por favor, seleccione un método de pago en el botón naranja.");
+            } else if (metodo.equals("Yape") || metodo.equals("Plin")) {
+                lblMontoValor.setText("  S/. " + monto + " | Transferir al número de la Biblioteca: 987-654-321 (" + metodo + ")");
+            } else {
+                lblMontoValor.setText("  S/. " + monto + " | Depositar a la Cuenta Corriente: 191-3849204-0-93 (" + metodo + ")");
+            }
+        };
+
+        // Evento al hacer clic en la tabla
+        tabla.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                actualizarBarraDetalle.run();
             }
         });
 
-        // ==================================================
-        // EVENTO: BOTÓN VOLVER
-        // ==================================================
+        // Evento al cambiar el método de pago en el JComboBox
+        comboMetodos.addActionListener(e -> actualizarBarraDetalle.run());
+
+        // Volver
         btnVolver.addActionListener(e -> {
             dispose();
             if (ventanaPadre != null) {
@@ -219,75 +229,95 @@ public class MultasPendientesFrame extends JFrame {
             }
         });
 
-        // ==================================================
-        // EVENTO: ACCIÓN PAGAR MULTA
-        // ==================================================
+        // =====================================================================
+        // MEJORA 2: INTERFAZ DE SIMULACIÓN DE PAGO AL CLICKEAR "PAGAR MULTA"
+        // =====================================================================
         btnPagar.addActionListener(e -> {
             int fila = tabla.getSelectedRow();
-            
             if (fila == -1) {
-                JOptionPane.showMessageDialog(null, "Por favor, seleccione una multa de la tabla.");
-                return;
-            }
-
-            // Validar que se haya escogido un método real
-            if (comboMetodos.getSelectedIndex() == 0) {
-                JOptionPane.showMessageDialog(null, "Debe seleccionar un método de pago (BCP, BBVA, Plin o Yape).");
+                JOptionPane.showMessageDialog(this, "Por favor, seleccione la multa que desea pagar.");
                 return;
             }
 
             String estado = tabla.getValueAt(fila, 5).toString();
             if (estado.equalsIgnoreCase("Pagada")) {
-                JOptionPane.showMessageDialog(null, "Esta multa ya se encuentra pagada.");
+                JOptionPane.showMessageDialog(this, "Esta multa ya está cancelada.");
+                return;
+            }
+
+            if (comboMetodos.getSelectedIndex() == 0) {
+                JOptionPane.showMessageDialog(this, "Debe seleccionar un método de pago (BCP, BBVA, Plin o Yape) en el selector.");
                 return;
             }
 
             int idMulta = Integer.parseInt(tabla.getValueAt(fila, 0).toString());
-            String metodoSeleccionado = comboMetodos.getSelectedItem().toString().trim();
+            String monto = tabla.getValueAt(fila, 4).toString();
+            String metodo = comboMetodos.getSelectedItem().toString();
 
+            // Ventana de simulación interactiva
+            String transaccionSimulada = "";
+            if (metodo.equals("Yape") || metodo.equals("Plin")) {
+                transaccionSimulada = JOptionPane.showInputDialog(this, 
+                        "Simulador de Pago " + metodo + "\n\n" +
+                        "1. Abre tu app de " + metodo + ".\n" +
+                        "2. Envía S/. " + monto + " al número: 987-654-321.\n" +
+                        "3. Ingresa aquí el código de operación/aprobación de la app:", 
+                        "Confirmación de Pago Celular", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                transaccionSimulada = JOptionPane.showInputDialog(this, 
+                        "Simulador de Pago Bancario (" + metodo + ")\n\n" +
+                        "1. Transfiere S/. " + monto + " a la cuenta: 191-3849204-0-93.\n" +
+                        "2. Ingresa aquí el número de operación del voucher:", 
+                        "Confirmación de Depósito Bancario", JOptionPane.INFORMATION_MESSAGE);
+            }
+
+            // Si el alumno cancela el cuadro de diálogo de simulación
+            if (transaccionSimulada == null) {
+                return; 
+            }
+
+            if (transaccionSimulada.trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Pago cancelado. Debe ingresar el código de validación de la transacción.");
+                return;
+            }
+
+            // Procesar el pago tras la validación simulada
             try {
                 Connection con = ConexionBD.conectar();
-                String sql =
-                        "UPDATE multas " +
-                        "SET estado='Pagada', " +
-                        "fecha_pago=CURRENT_TIMESTAMP " +
-                        "WHERE id_multa=?";
-
+                String sql = "UPDATE multas SET estado='Pagada', fecha_pago=CURRENT_TIMESTAMP WHERE id_multa=?";
                 PreparedStatement ps = con.prepareStatement(sql);
                 ps.setInt(1, idMulta);
                 ps.executeUpdate();
-                
-                JOptionPane.showMessageDialog(null, "¡Pago de S/. " + tabla.getValueAt(fila, 4) + " realizado con éxito vía " + metodoSeleccionado + "!");
-                
-                // Reiniciar campos e interfaz
+
+                JOptionPane.showMessageDialog(this, 
+                        "¡Pago Procesado Correctamente!\n" +
+                        "Método: " + metodo + "\n" +
+                        "Transacción: " + transaccionSimulada.trim().toUpperCase() + "\n" +
+                        "Monto: S/. " + monto);
+
                 modelo.setRowCount(0);
                 lblMontoValor.setText("  Seleccione una multa de la tabla...");
                 comboMetodos.setSelectedIndex(0);
-                
-                // Recargar base de datos
                 cargarMultas(idEstudiante);
 
                 ps.close();
                 con.close();
             } catch (Exception ex) {
                 ex.printStackTrace();
-                JOptionPane.showMessageDialog(null, "Error crítico al procesar el pago.");
+                JOptionPane.showMessageDialog(this, "Error de conexión al procesar el cobro.");
             }
         });
 
-        // Cargar multas del alumno logueado
         cargarMultas(idEstudiante);
-
         setVisible(true);
     }
 
-    // ==================================================
-    // CARGAR MULTAS DESDE BASE DE DATOS
-    // ==================================================
     private void cargarMultas(int idEstudiante) {
+        // Definimos el formato limpio y estético que queremos mostrar (Día/Mes/Año Hora:Minutos)
+        java.text.SimpleDateFormat formateador = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm");
+
         try {
             Connection con = ConexionBD.conectar();
-            // Adaptado para obtener la Fecha de Préstamo requerida por la columna 2 del nuevo mockup
             String sql =
                     "SELECT m.id_multa, p.fecha_prestamo, e.nombre AS estudiante, l.titulo, m.monto, m.estado, m.fecha_pago " +
                     "FROM multas m " +
@@ -300,20 +330,30 @@ public class MultasPendientesFrame extends JFrame {
             ps.setInt(1, idEstudiante);
             ResultSet rs = ps.executeQuery();
             boolean hayMultas = false;
-            
+
             while (rs.next()) {
                 hayMultas = true;
-                modelo.addRow(
-                        new Object[]{
-                                rs.getInt("id_multa"),
-                                rs.getTimestamp("fecha_prestamo"), // Agregado según mockup
-                                rs.getString("estudiante"),
-                                rs.getString("titulo"),
-                                rs.getDouble("monto"),
-                                rs.getString("estado"),
-                                rs.getTimestamp("fecha_pago") != null ? rs.getTimestamp("fecha_pago") : "Pendiente"
-                        }
-                );
+
+                // Formateamos la Fecha de Préstamo
+                java.sql.Timestamp tsPrestamo = rs.getTimestamp("fecha_prestamo");
+                String fechaPrestamoFormateada = (tsPrestamo != null) ? formateador.format(tsPrestamo) : "-";
+
+                // Formateamos la Fecha de Pago
+                java.sql.Timestamp tsPago = rs.getTimestamp("fecha_pago");
+                String fechaPagoFormateada = "Pendiente";
+                if (tsPago != null) {
+                    fechaPagoFormateada = formateador.format(tsPago);
+                }
+
+                modelo.addRow(new Object[]{
+                        rs.getInt("id_multa"),
+                        fechaPrestamoFormateada, // Ahora se muestra limpio (ej: 14/07/2026 00:00)
+                        rs.getString("estudiante"),
+                        rs.getString("titulo"),
+                        rs.getDouble("monto"),
+                        rs.getString("estado"),
+                        fechaPagoFormateada      // Ahora se muestra limpio (ej: 14/07/2026 21:05)
+                });
             }
 
             if (!hayMultas) {
