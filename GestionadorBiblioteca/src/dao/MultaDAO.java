@@ -17,33 +17,14 @@ public class MultaDAO {
                     "(id_prestamo,monto,motivo,estado) " +
                     "VALUES (?,?,?,?)";
 
-            PreparedStatement ps =
-                    con.prepareStatement(sql);
-
-            ps.setInt(
-                    1,
-                    multa.getIdPrestamo()
-            );
-
-            ps.setDouble(
-                    2,
-                    multa.getMonto()
-            );
-
-            ps.setString(
-                    3,
-                    multa.getMotivo()
-            );
-
-            ps.setString(
-                    4,
-                    multa.getEstado()
-            );
-
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setInt(1, multa.getIdPrestamo());
+            ps.setDouble( 2,multa.getMonto() );
+            ps.setString(3,multa.getMotivo());
+            ps.setString(4, multa.getEstado());
             ps.executeUpdate();
 
         } catch (Exception e) {
-
             e.printStackTrace();
         }
     }

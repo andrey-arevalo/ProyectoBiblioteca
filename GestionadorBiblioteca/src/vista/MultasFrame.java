@@ -17,6 +17,7 @@ import java.awt.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.text.SimpleDateFormat;
 
 public class MultasFrame extends JFrame {
 
@@ -304,12 +305,32 @@ public class MultasFrame extends JFrame {
     private void formatearYCentrarColumnas() {
         DefaultTableCellRenderer centro = new DefaultTableCellRenderer();
         centro.setHorizontalAlignment(JLabel.CENTER);
+
+        // Renderizador personalizado para formatear la fecha como "dd/MM/yyyy HH:mm"
+        DefaultTableCellRenderer renderizadorFecha = new DefaultTableCellRenderer() {
+            private final SimpleDateFormat formateador = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+
+            @Override
+            protected void setValue(Object value) {
+                if (value instanceof java.util.Date) {
+                    setText(formateador.format((java.util.Date) value));
+                } else if (value != null) {
+                    setText(value.toString());
+                } else {
+                    setText("-"); // Si la fecha de pago es nula, mostramos una marca elegante
+                }
+            }
+        };
+        renderizadorFecha.setHorizontalAlignment(JLabel.CENTER);
+
         if (tabla.getColumnCount() > 0) {
             tabla.getColumnModel().getColumn(0).setCellRenderer(centro); 
             tabla.getColumnModel().getColumn(1).setCellRenderer(centro); 
             tabla.getColumnModel().getColumn(4).setCellRenderer(centro); 
             tabla.getColumnModel().getColumn(5).setCellRenderer(centro); 
-            tabla.getColumnModel().getColumn(6).setCellRenderer(centro); 
+            
+            // Aplicar el formateador de fechas específico en la columna "Fecha de pago" (índice 6)
+            tabla.getColumnModel().getColumn(6).setCellRenderer(renderizadorFecha); 
         }
     }
 }

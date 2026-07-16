@@ -19,7 +19,6 @@ public class DisponibilidadFrame extends JFrame {
 
     private final Color MARRON = new Color(92, 43, 5);
     private final Color MARRON_CLARO_BUSCADOR = new Color(188, 102, 45);
-    private final Color NARANJA_BOTONES = new Color(245, 155, 95);
 
     private JTextField txtBuscar;
     private JTable tabla;
@@ -77,13 +76,13 @@ public class DisponibilidadFrame extends JFrame {
         panelPrincipal.add(btnVolver);
 
         //==================================================
-        // ICONO SUPERIOR (validar.png) - AJUSTADO
+        // ICONO SUPERIOR (validar.png)
         //==================================================
         try {
             ImageIcon icono = new ImageIcon(getClass().getResource("/imagenes/validar.png"));
             Image img = icono.getImage().getScaledInstance(110, 110, Image.SCALE_SMOOTH);
             JLabel lblIcono = new JLabel(new ImageIcon(img));
-            lblIcono.setBounds(545, 15, 110, 110); // Ubicación Y inicial
+            lblIcono.setBounds(545, 15, 110, 110);
             panelPrincipal.add(lblIcono);
         } catch (Exception e) {
             JLabel lbl = new JLabel("🔍");
@@ -92,20 +91,20 @@ public class DisponibilidadFrame extends JFrame {
             panelPrincipal.add(lbl);
         }
 
-        // CORRECCIÓN: Bajamos la línea a Y = 135 para que no pise el borde inferior de la lupa
+        // Línea divisoria
         JPanel linea = new JPanel();
         linea.setBackground(MARRON);
         linea.setBounds(30, 135, 1140, 4);
         panelPrincipal.add(linea);
 
         //==================================================
-        // TÍTULO - REDISTRIBUIDO
+        // TÍTULO
         //==================================================
         JLabel lblTitulo = new JLabel("Validar disponibilidad");
         lblTitulo.setFont(new Font("Georgia", Font.BOLD, 38));
         lblTitulo.setForeground(MARRON);
         lblTitulo.setHorizontalAlignment(SwingConstants.CENTER);
-        lblTitulo.setBounds(0, 155, 1200, 45); // Bajado ligeramente a 155 para dar aire
+        lblTitulo.setBounds(0, 155, 1200, 45);
         panelPrincipal.add(lblTitulo);
 
         //==================================================
@@ -126,7 +125,7 @@ public class DisponibilidadFrame extends JFrame {
         txtBuscar.setFont(new Font("Arial", Font.BOLD, 18));
         panelPrincipal.add(txtBuscar);
 
-        // Botón Validar (Marrón/Naranja oscuro según mockup)
+        // Botón Validar
         btnValidar = new RoundedButton("Validar");
         btnValidar.setBounds(1015, 212, 100, 35);
         btnValidar.setBackground(MARRON);
@@ -143,7 +142,7 @@ public class DisponibilidadFrame extends JFrame {
         panelPrincipal.add(btnLimpiar);
 
         //==================================================
-        // CONFIGURACIÓN DE LA TABLA (CABECERAS EXACTAS)
+        // CONFIGURACIÓN DE LA TABLA
         //==================================================
         String columnas[] = {"ID Libro", "Título", "Autor", "Categoría", "Disponible"};
         tabla = new JTable();
@@ -153,7 +152,7 @@ public class DisponibilidadFrame extends JFrame {
         
         JTableHeader header = tabla.getTableHeader();
         header.setFont(new Font("Arial", Font.BOLD, 16));
-        header.setBackground(new Color(245, 237, 225)); // Color beige exacto
+        header.setBackground(new Color(245, 237, 225));
         header.setForeground(Color.BLACK);
 
         scroll = new JScrollPane(tabla);
@@ -164,34 +163,31 @@ public class DisponibilidadFrame extends JFrame {
         // EVENTOS Y LÓGICA
         //==================================================
         btnVolver.addActionListener(e -> {
-            dispose(); // Destruye esta ventana
+            dispose();
             if (ventanaPadre != null) {
-                ventanaPadre.setVisible(true); // Regresa a la ventana original sin crear duplicados
+                ventanaPadre.setVisible(true);
             }
         });
 
-        // Evento de disparo rápido con la tecla ENTER
+        // Evento de disparo con la tecla ENTER
         txtBuscar.addActionListener(e -> btnValidar.doClick());
 
         btnValidar.addActionListener(e -> {
             String filtro = txtBuscar.getText().trim();
-            if (!filtro.isEmpty()) {
-                validarLibro(filtro);
-            } else {
-                limpiarTodo();
-            }
+            validarLibro(filtro);
         });
 
         btnLimpiar.addActionListener(e -> limpiarTodo());
 
+        // MODIFICACIÓN PRINCIPAL: Carga automática al entrar a la interfaz
         limpiarTodo();
+        
         setVisible(true);
     }
 
     private void limpiarTodo() {
         txtBuscar.setText("");
-        DefaultTableModel modelo = (DefaultTableModel) tabla.getModel();
-        modelo.setRowCount(0);
+        validarLibro(""); // Carga de forma predeterminada todos los libros registrados
         txtBuscar.requestFocusInWindow();
     }
 
@@ -210,8 +206,10 @@ public class DisponibilidadFrame extends JFrame {
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setString(1, "%" + tituloFiltro + "%");
             ResultSet rs = ps.executeQuery();
+            boolean encontrado = false;
 
             while (rs.next()) {
+                encontrado = true;
                 modelo.addRow(new Object[]{
                         rs.getInt("id_libro"),
                         rs.getString("titulo"),
@@ -220,6 +218,11 @@ public class DisponibilidadFrame extends JFrame {
                         rs.getBoolean("disponible") ? "Sí" : "No"
                 });
             }
+            
+            if (!encontrado && !tituloFiltro.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "No se encontraron libros con el título especificado.");
+            }
+            
             con.close();
         } catch (Exception ex) {
             ex.printStackTrace();

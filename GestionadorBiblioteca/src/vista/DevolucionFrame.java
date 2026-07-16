@@ -8,10 +8,12 @@ import conexion.ConexionBD;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
+import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.text.SimpleDateFormat;
 
 public class DevolucionFrame extends JFrame {
 
@@ -161,7 +163,12 @@ public class DevolucionFrame extends JFrame {
         //==================================================
         String columnas[] = {"ID Libro", "Estudiante", "Libro devuelto", "Fecha de préstamos"};
         tabla = new JTable();
-        tabla.setModel(new DefaultTableModel(new Object[][]{}, columnas));
+        tabla.setModel(new DefaultTableModel(new Object[][]{}, columnas) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        });
         tabla.setRowHeight(30);
         tabla.setFont(new Font("Arial", Font.PLAIN, 15));
         
@@ -175,7 +182,7 @@ public class DevolucionFrame extends JFrame {
         panelPrincipal.add(scroll);
 
         //==================================================
-        // EVENTOS Y LÓGICA DE RETORNO CONTROLADO (Modificado)
+        // EVENTOS Y LÓGICA DE RETORNO CONTROLADO
         //==================================================
         btnVolver.addActionListener(e -> {
             dispose(); // Destruye el formulario de devoluciones
@@ -289,12 +296,40 @@ public class DevolucionFrame extends JFrame {
                         rs.getInt("id_libro"),
                         rs.getString("estudiante"),
                         rs.getString("libro"),
-                        rs.getDate("fecha_prestamo")
+                        rs.getTimestamp("fecha_prestamo") // Obtenemos el Timestamp para conservar horas y minutos
                 });
             }
+            formatearColumnas();
             con.close();
         } catch (Exception ex) {
             ex.printStackTrace();
+        }
+    }
+
+    private void formatearColumnas() {
+        DefaultTableCellRenderer centro = new DefaultTableCellRenderer();
+        centro.setHorizontalAlignment(JLabel.CENTER);
+
+        // Renderizador con el formato de fecha solicitado
+        DefaultTableCellRenderer renderizadorFecha = new DefaultTableCellRenderer() {
+            private final SimpleDateFormat formateador = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+
+            @Override
+            protected void setValue(Object value) {
+                if (value instanceof java.util.Date) {
+                    setText(formateador.format((java.util.Date) value));
+                } else if (value != null) {
+                    setText(value.toString());
+                } else {
+                    setText("-");
+                }
+            }
+        };
+        renderizadorFecha.setHorizontalAlignment(JLabel.CENTER);
+
+        if (tabla.getColumnCount() > 0) {
+            tabla.getColumnModel().getColumn(0).setCellRenderer(centro); // Centrar ID Libro
+            tabla.getColumnModel().getColumn(3).setCellRenderer(renderizadorFecha); // Formatear y centrar Fecha de préstamo
         }
     }
 

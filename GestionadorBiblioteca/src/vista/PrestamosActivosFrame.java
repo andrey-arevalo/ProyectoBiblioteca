@@ -15,6 +15,8 @@ import java.sql.ResultSet;
 
 public class PrestamosActivosFrame extends JFrame {
     
+    private static final long serialVersionUID = 1L;
+    
     private final Color MARRON_TEXTO_Y_BOTONES = new Color(92, 43, 5);
     private final Color MARRON_CLARO_BUSCADOR = new Color(188, 102, 45);
     
@@ -34,7 +36,6 @@ public class PrestamosActivosFrame extends JFrame {
         setTitle("Listado de Préstamos Activos");
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setMinimumSize(new Dimension(1366, 768));
-        // Corregido: DISPOSE_ON_CLOSE para no romper el ciclo de la app
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         BackgroundPanel fondo = new BackgroundPanel("/imagenes/bibliotecafondo.jpg");
@@ -156,7 +157,7 @@ public class PrestamosActivosFrame extends JFrame {
         contenedor.add(scroll);
 
         //==================================================
-        // LÓGICA DE EVENTOS (Modificado)
+        // LÓGICA DE EVENTOS
         //==================================================
         btnVolver.addActionListener(e -> { 
             dispose(); // Cierra esta ventana de listado activo
@@ -165,41 +166,29 @@ public class PrestamosActivosFrame extends JFrame {
             }
         });
 
-        // Buscar únicamente cuando se presiona el botón Buscar
+        // Buscar filtrando por texto
         btnBuscar.addActionListener(e -> {
             String filtro = txtBuscarLibro.getText().trim();
-            if (!filtro.isEmpty()) {
-                cargarPrestamosActivos(filtro);
-            } else {
-                limpiarTabla();
-            }
+            cargarPrestamosActivos(filtro);
         });
         
         // Permitir que se busque al presionar la tecla ENTER en el campo de texto
         txtBuscarLibro.addActionListener(e -> {
             String filtro = txtBuscarLibro.getText().trim();
-            if (!filtro.isEmpty()) {
-                cargarPrestamosActivos(filtro);
-            } else {
-                limpiarTabla();
-            }
+            cargarPrestamosActivos(filtro);
         });
         
-        // El botón limpiar remueve todo el contenido visual de la tabla
+        // El botón limpiar restaura el buscador y muestra todos los préstamos activos de nuevo
         btnLimpiar.addActionListener(e -> {
             txtBuscarLibro.setText("");
-            limpiarTabla();
+            cargarPrestamosActivos("");
+            txtBuscarLibro.requestFocus();
         });
 
-        // Al iniciar la pantalla la tabla aparece limpia sin registros
-        limpiarTabla();
+        // MODIFICACIÓN PRINCIPAL: Carga automática de los datos al entrar a la interfaz
+        cargarPrestamosActivos("");
 
         setVisible(true);
-    }
-
-    private void limpiarTabla() {
-        DefaultTableModel modelo = (DefaultTableModel) tabla.getModel();
-        modelo.setRowCount(0);
     }
 
     private void cargarPrestamosActivos(String libroFiltro) {
@@ -208,25 +197,32 @@ public class PrestamosActivosFrame extends JFrame {
 
         try {
             Connection con = ConexionBD.conectar();
+            // Además, ordenamos la visualización alfabéticamente por el nombre del estudiante (e.nombre)
             String sql = "SELECT p.id_prestamo, l.titulo AS libro, e.nombre AS estudiante, p.fecha_prestamo " +
                          "FROM prestamos p " +
                          "INNER JOIN estudiantes e ON p.id_estudiante = e.id_estudiante " +
                          "INNER JOIN libros l ON p.id_libro = l.id_libro " +
                          "WHERE p.estado = 'ACTIVO' AND LOWER(l.titulo) LIKE LOWER(?) " + 
-                         "ORDER BY p.id_prestamo ASC";
+                         "ORDER BY e.nombre ASC";
 
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setString(1, "%" + libroFiltro + "%");
             
             ResultSet rs = ps.executeQuery();
+            boolean encontrado = false;
 
             while (rs.next()) {
+                encontrado = true;
                 modelo.addRow(new Object[]{
                     rs.getInt("id_prestamo"),
                     rs.getString("libro"),
                     rs.getString("estudiante"),
                     rs.getDate("fecha_prestamo")
                 });
+            }
+            
+            if(!encontrado && !libroFiltro.isEmpty()){
+                JOptionPane.showMessageDialog(this, "No se encontraron préstamos activos para el libro especificado.");
             }
             
             con.close();

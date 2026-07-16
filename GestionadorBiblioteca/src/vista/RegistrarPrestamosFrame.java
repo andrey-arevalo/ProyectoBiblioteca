@@ -10,6 +10,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import javax.swing.*;
 import java.awt.*;
@@ -210,6 +212,18 @@ public class RegistrarPrestamosFrame extends JFrame {
                     return;
                 }
                 int idEstudiante = rsEst.getInt("id_estudiante");
+                
+                //Detectar si tiene multas 
+                if(tieneMultasPendientes(idEstudiante)){
+                    JOptionPane.showMessageDialog(
+                            this,
+                            "El estudiante tiene multas pendientes.\n\nDebe pagarlas antes de registrar un nuevo préstamo.",
+                            "Préstamo bloqueado",
+                            JOptionPane.WARNING_MESSAGE
+                    );
+                    return;
+
+                }
 
                 // Buscar libro
                 String sqlLibro = "SELECT id_libro, disponible FROM libros WHERE LOWER(titulo)=LOWER(?)";
@@ -289,13 +303,84 @@ public class RegistrarPrestamosFrame extends JFrame {
                         rs.getString("estudiante"),
                         rs.getString("libro"),
                         rs.getString("estado"),
-                        rs.getDate("fecha_prestamo")
+                        rs.getTimestamp("fecha_prestamo") // Modificado rs.getDate por rs.getTimestamp
                 });
             }
+            
+            // Aplica el formato limpio a las columnas
+            formatearYCentrarColumnas();
+            
         } catch (Exception ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this, "No se pudieron cargar los préstamos.");
         }
+    }
+
+    private void formatearYCentrarColumnas() {
+        DefaultTableCellRenderer centro = new DefaultTableCellRenderer();
+        centro.setHorizontalAlignment(JLabel.CENTER);
+
+        // Renderizador ultra-seguro contra milisegundos y microsegundos
+        DefaultTableCellRenderer renderizadorFecha = new DefaultTableCellRenderer() {
+            private final SimpleDateFormat formateador = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+
+            @Override
+            protected void setValue(Object value) {
+                if (value instanceof java.util.Date) {
+                    setText(formateador.format((java.util.Date) value));
+                } else if (value != null) {
+                    try {
+                        String strValue = value.toString();
+                        // Si contiene milisegundos o microsegundos lo cortamos
+                        if (strValue.contains(".")) {
+                            strValue = strValue.substring(0, strValue.lastIndexOf("."));
+                        }
+                        java.util.Date fechaAux = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(strValue);
+                        setText(formateador.format(fechaAux));
+                    } catch (Exception e) {
+                        String texto = value.toString();
+                        if (texto.length() > 16) {
+                            setText(texto.substring(0, 16)); 
+                        } else {
+                            setText(texto);
+                        }
+                    }
+                } else {
+                    setText("-");
+                }
+            }
+        };
+        renderizadorFecha.setHorizontalAlignment(JLabel.CENTER);
+
+        // En esta JTable, "Fecha de préstamo" es la columna índice 4 (0-indexado: ID(0), Estudiante(1), Libro(2), Estado(3), Fecha(4))
+        if (tabla.getColumnCount() >= 5) {
+            tabla.getColumnModel().getColumn(0).setCellRenderer(centro); 
+            tabla.getColumnModel().getColumn(3).setCellRenderer(centro); // Centrar columna "Estado"
+            tabla.getColumnModel().getColumn(4).setCellRenderer(renderizadorFecha); // Formatear columna "Fecha de préstamo"
+        }
+    }
+
+    private boolean tieneMultasPendientes(int idEstudiante){
+        try{
+            Connection con = ConexionBD.conectar();
+            String sql =
+                    "SELECT COUNT(*) " +
+                    "FROM multas m " +
+                    "JOIN prestamos p ON m.id_prestamo=p.id_prestamo " +
+                    "WHERE p.id_estudiante=? " +
+                    "AND LOWER(m.estado)='pendiente'";
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setInt(1,idEstudiante);
+            ResultSet rs = ps.executeQuery();
+            if(rs.next()){
+                return rs.getInt(1)>0;
+            }
+
+        }catch(Exception ex){
+            ex.printStackTrace();
+        }
+        return false;
+
     }
 
     //==================================================

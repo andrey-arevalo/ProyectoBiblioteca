@@ -53,7 +53,7 @@ public class RegistrarUsuarioFrame extends JFrame {
         // ====================================================
         // BOTÓN VOLVER (Esquina superior izquierda)
         // ====================================================
-        btnVolver = new RoundedButton("VOLVER");
+        btnVolver = new RoundedButton(" VOLVER");
         btnVolver.setBounds(35, 25, 135, 45);
         btnVolver.setBackground(MARRON_TEXTO_TITULO); 
         btnVolver.setForeground(Color.WHITE);
@@ -76,7 +76,6 @@ public class RegistrarUsuarioFrame extends JFrame {
                 btnVolver.setIcon(new ImageIcon(imgScaled));
             }
         } catch(Exception e) {
-        	dispose();
             btnVolver.setText("← VOLVER");
         }
         panelPrincipal.add(btnVolver);
@@ -182,56 +181,16 @@ public class RegistrarUsuarioFrame extends JFrame {
         // ====================================================
         // CONTROLADORES DE EVENTOS (PostgreSQL Nativo)
         // ====================================================
-        btnRegistrar.addActionListener(e -> {
-            String nombre = txtNombre.getText().trim();
-            String password = String.valueOf(txtPassword.getPassword()).trim();
+        
+        // Evento click al botón registrar
+        btnRegistrar.addActionListener(e -> registrarUsuario(rol));
 
-            if (nombre.isEmpty() || password.isEmpty() || (rol.equalsIgnoreCase("Estudiante") && txtCarrera.getText().trim().isEmpty())) {
-                JOptionPane.showMessageDialog(null, "Por favor, llene todos los campos del formulario.");
-                return;
-            }
-
-            Connection con = null;
-            try {
-                con = ConexionBD.conectar();
-                con.setAutoCommit(false); 
-
-                int idRol = 0;
-                if (rol.equalsIgnoreCase("Administrador")) idRol = 1;
-                else if (rol.equalsIgnoreCase("Bibliotecario")) idRol = 2;
-                else if (rol.equalsIgnoreCase("Estudiante")) idRol = 3;
-
-                String sqlUsuario = "INSERT INTO usuarios(nombre, contrasena, id_rol) VALUES(?, ?, ?) RETURNING id_usuario";
-                PreparedStatement psUsuario = con.prepareStatement(sqlUsuario);
-                psUsuario.setString(1, nombre);
-                psUsuario.setString(2, password);
-                psUsuario.setInt(3, idRol);
-                
-                ResultSet rs = psUsuario.executeQuery();
-                int idUsuario = 0;
-                if (rs.next()) {
-                    idUsuario = rs.getInt("id_usuario");
-                }
-
-                if (rol.equalsIgnoreCase("Estudiante")) {
-                    String sqlEstudiante = "INSERT INTO estudiantes(nombre, carrera, id_usuario) VALUES(?, ?, ?)";
-                    PreparedStatement psEstudiante = con.prepareStatement(sqlEstudiante);
-                    psEstudiante.setString(1, nombre);
-                    psEstudiante.setString(2, txtCarrera.getText().trim());
-                    psEstudiante.setInt(3, idUsuario);
-                    psEstudiante.executeUpdate();
-                }
-
-                con.commit(); 
-                JOptionPane.showMessageDialog(null, rol + " registrado correctamente.");
-                limpiarCampos();
-
-            } catch (Exception ex) {
-                if (con != null) { try { con.rollback(); } catch (Exception rb) { rb.printStackTrace(); } }
-                ex.printStackTrace();
-                JOptionPane.showMessageDialog(null, "Error de PostgreSQL: " + ex.getMessage());
-            }
-        });
+        // EVENTOS ENTER: Al pulsar Enter en cualquiera de los inputs se dispara el registro
+        txtNombre.addActionListener(e -> registrarUsuario(rol));
+        txtPassword.addActionListener(e -> registrarUsuario(rol));
+        if (txtCarrera != null) {
+            txtCarrera.addActionListener(e -> registrarUsuario(rol));
+        }
 
         btnEliminar.addActionListener(e -> {
             String nombre = txtNombre.getText().trim();
@@ -291,8 +250,62 @@ public class RegistrarUsuarioFrame extends JFrame {
         btnVolver.addActionListener(e -> {
             dispose();
         });
-
         setVisible(true);
+    }
+
+    /**
+     * Lógica de registro modularizada para poder llamarse desde el botón
+     * o mediante la tecla Enter en cualquier campo de texto.
+     */
+    private void registrarUsuario(String rol) {
+        String nombre = txtNombre.getText().trim();
+        String password = String.valueOf(txtPassword.getPassword()).trim();
+
+        if (nombre.isEmpty() || password.isEmpty() || (rol.equalsIgnoreCase("Estudiante") && txtCarrera.getText().trim().isEmpty())) {
+            JOptionPane.showMessageDialog(null, "Por favor, llene todos los campos del formulario.");
+            return;
+        }
+
+        Connection con = null;
+        try {
+            con = ConexionBD.conectar();
+            con.setAutoCommit(false); 
+
+            int idRol = 0;
+            if (rol.equalsIgnoreCase("Administrador")) idRol = 1;
+            else if (rol.equalsIgnoreCase("Bibliotecario")) idRol = 2;
+            else if (rol.equalsIgnoreCase("Estudiante")) idRol = 3;
+
+            String sqlUsuario = "INSERT INTO usuarios(nombre, contrasena, id_rol) VALUES(?, ?, ?) RETURNING id_usuario";
+            PreparedStatement psUsuario = con.prepareStatement(sqlUsuario);
+            psUsuario.setString(1, nombre);
+            psUsuario.setString(2, password);
+            psUsuario.setInt(3, idRol);
+            
+            ResultSet rs = psUsuario.executeQuery();
+            int idUsuario = 0;
+            if (rs.next()) {
+                idUsuario = rs.getInt("id_usuario");
+            }
+
+            if (rol.equalsIgnoreCase("Estudiante")) {
+                String sqlEstudiante = "INSERT INTO estudiantes(nombre, carrera, id_usuario) VALUES(?, ?, ?)";
+                PreparedStatement psEstudiante = con.prepareStatement(sqlEstudiante);
+                psEstudiante.setString(1, nombre);
+                psEstudiante.setString(2, txtCarrera.getText().trim());
+                psEstudiante.setInt(3, idUsuario);
+                psEstudiante.executeUpdate();
+            }
+
+            con.commit(); 
+            JOptionPane.showMessageDialog(null, rol + " registrado correctamente.");
+            limpiarCampos();
+
+        } catch (Exception ex) {
+            if (con != null) { try { con.rollback(); } catch (Exception rb) { rb.printStackTrace(); } }
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Error de PostgreSQL: " + ex.getMessage());
+        }
     }
 
     private void setupEstiloInput(JTextField field) {

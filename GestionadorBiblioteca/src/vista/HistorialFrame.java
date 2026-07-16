@@ -17,8 +17,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.text.SimpleDateFormat;
 
 public class HistorialFrame extends JFrame {
+
+    private static final long serialVersionUID = 1L;
 
     private RoundedTextField txtBuscar;
     private RoundedButton btnBuscar;
@@ -32,7 +35,7 @@ public class HistorialFrame extends JFrame {
 
         setTitle("Historial de Préstamos");
         
-        // --- MAXIMIZADO RESPECTANDO LA BARRA DE TAREAS ---
+        // --- MAXIMIZADO RESPETANDO LA BARRA DE TAREAS ---
         setExtendedState(JFrame.MAXIMIZED_BOTH); 
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
@@ -78,6 +81,7 @@ public class HistorialFrame extends JFrame {
         
         // --- LÍNEA DIVISORIA ESTILIZADA ---
         JPanel pnlLine = new JPanel() {
+            private static final long serialVersionUID = 1L;
             @Override
             protected void paintComponent(Graphics g) {
                 g.setColor(new Color(85, 23, 0));
@@ -116,6 +120,7 @@ public class HistorialFrame extends JFrame {
         };
 
         modelo = new DefaultTableModel(columnas, 0) {
+            private static final long serialVersionUID = 1L;
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false; 
@@ -158,63 +163,27 @@ public class HistorialFrame extends JFrame {
                 btnVolver.setIcon(new ImageIcon(flipped.getScaledInstance(18, 12, Image.SCALE_SMOOTH)));
             }
         } catch(Exception e) {
-            btnVolver.setText("← Volver");
+            btnVolver.setText(" Volver");
         }
         panel.add(btnVolver);
 
         // ===================================
-        // LÓGICA DEL BOTÓN BUSCAR
+        // EVENTOS Y CONTROLADORES
         // ===================================
         btnBuscar.addActionListener(e -> {
-            modelo.setRowCount(0); 
             String nombre = txtBuscar.getText().trim();
 
             if(nombre.isEmpty()){
                  JOptionPane.showMessageDialog(null, "Ingrese el nombre del estudiante.");
                  return;
             }
-            try{
-                Connection con = ConexionBD.conectar();
-                String sql =
-                        "SELECT p.id_prestamo, e.nombre AS estudiante, l.titulo AS libro, p.fecha_prestamo, p.estado " +
-                        "FROM prestamos p " +
-                        "JOIN estudiantes e ON p.id_estudiante=e.id_estudiante " +
-                        "JOIN libros l ON p.id_libro=l.id_libro " +
-                        "WHERE LOWER(e.nombre) LIKE LOWER(?) " +
-                        "ORDER BY p.id_prestamo ASC"; 
-
-                PreparedStatement ps = con.prepareStatement(sql);
-                ps.setString(1, "%" + nombre + "%");
-                ResultSet rs = ps.executeQuery();
-                boolean encontrado = false;
-
-                while(rs.next()){
-                    encontrado = true;
-                    modelo.addRow(new Object[]{
-                            rs.getInt("id_prestamo"),
-                            rs.getString("estudiante"),
-                            rs.getString("libro"),
-                            rs.getTimestamp("fecha_prestamo"),
-                            rs.getString("estado")
-                    });
-                }
-
-                formatearYCentrarColumnas();
-
-                if(!encontrado){
-                    JOptionPane.showMessageDialog(null, "El estudiante no tiene préstamos registrados.");
-                }
-                con.close();
-            }catch(Exception ex){
-                ex.printStackTrace();
-                JOptionPane.showMessageDialog(null, "Error al buscar préstamos.");
-            }
+            buscarYMostrarPrestamos(nombre);
         });
 
-        // BOTÓN LIMPIAR: Vacía por completo la tabla
+        // BOTÓN LIMPIAR: Vacía la búsqueda y vuelve a listar de forma predeterminada ordenada
         btnLimpiar.addActionListener(e -> {
             txtBuscar.setText("");
-            modelo.setRowCount(0); 
+            buscarYMostrarPrestamos(""); 
             txtBuscar.requestFocus();
         });
 
@@ -232,7 +201,52 @@ public class HistorialFrame extends JFrame {
             }
         });
 
+        // Carga automática inicial de todos los préstamos ordenados alfabéticamente
+        buscarYMostrarPrestamos("");
+
         setVisible(true);
+    }
+
+    // Método optimizado que consulta la base de datos y la ordena según el orden de nombre de estudiante
+    private void buscarYMostrarPrestamos(String nombreEstudiante) {
+        modelo.setRowCount(0); 
+        try {
+            Connection con = ConexionBD.conectar();
+            // MODIFICACIÓN SQL: Añadido "ORDER BY e.nombre ASC" para ordenar alfabéticamente por estudiante
+            String sql =
+                    "SELECT p.id_prestamo, e.nombre AS estudiante, l.titulo AS libro, p.fecha_prestamo, p.estado " +
+                    "FROM prestamos p " +
+                    "JOIN estudiantes e ON p.id_estudiante = e.id_estudiante " +
+                    "JOIN libros l ON p.id_libro = l.id_libro " +
+                    "WHERE LOWER(e.nombre) LIKE LOWER(?) " +
+                    "ORDER BY e.nombre ASC"; 
+
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setString(1, "%" + nombreEstudiante + "%");
+            ResultSet rs = ps.executeQuery();
+            boolean encontrado = false;
+
+            while(rs.next()){
+                encontrado = true;
+                modelo.addRow(new Object[]{
+                        rs.getInt("id_prestamo"),
+                        rs.getString("estudiante"),
+                        rs.getString("libro"),
+                        rs.getTimestamp("fecha_prestamo"),
+                        rs.getString("estado")
+                });
+            }
+
+            formatearYCentrarColumnas();
+
+            if(!encontrado && !nombreEstudiante.isEmpty()){
+                JOptionPane.showMessageDialog(null, "El estudiante no tiene préstamos registrados.");
+            }
+            con.close();
+        } catch(Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Error al buscar préstamos en la base de datos.");
+        }
     }
 
     private void scrollTablaConfig() {
@@ -248,9 +262,28 @@ public class HistorialFrame extends JFrame {
     private void formatearYCentrarColumnas() {
         DefaultTableCellRenderer centro = new DefaultTableCellRenderer();
         centro.setHorizontalAlignment(JLabel.CENTER);
-        if (tabla.getColumnCount() > 0) {
-            tabla.getColumnModel().getColumn(0).setCellRenderer(centro); 
-            tabla.getColumnModel().getColumn(4).setCellRenderer(centro); 
+
+        // Renderizador personalizado para formatear la fecha correctamente (dd/MM/yyyy HH:mm)
+        DefaultTableCellRenderer renderizadorFecha = new DefaultTableCellRenderer() {
+        	private final SimpleDateFormat formateador = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+
+            @Override
+            protected void setValue(Object value) {
+                if (value instanceof java.util.Date) {
+                    setText(formateador.format((java.util.Date) value));
+                } else if (value != null) {
+                    setText(value.toString());
+                } else {
+                    setText("-");
+                }
+            }
+        };
+        renderizadorFecha.setHorizontalAlignment(JLabel.CENTER);
+
+        if (tabla.getColumnCount() >= 5) {
+            tabla.getColumnModel().getColumn(0).setCellRenderer(centro); // Centrar ID Préstamo
+            tabla.getColumnModel().getColumn(3).setCellRenderer(renderizadorFecha); // Formatear y centrar Fecha Préstamo
+            tabla.getColumnModel().getColumn(4).setCellRenderer(centro); // Centrar Estado
         }
     }
 }

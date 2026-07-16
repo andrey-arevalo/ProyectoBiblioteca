@@ -147,7 +147,6 @@ public class LoginFrame extends JFrame {
                 }
             }
         });
-
         setVisible(true);
     }
 }

@@ -116,11 +116,11 @@ public class EstudianteFrame extends JFrame {
         panelDerecho.setLayout(null);
         panelContenedor.add(panelDerecho);
 
-        // Saludo dinámico
+        // MODIFICACIÓN: Se amplió el ancho de 580 a 860 para evitar que el nombre se corte
         JLabel lblBienvenido = new JLabel("Bienvenido, " + this.nombreEstudiante);
         lblBienvenido.setFont(new Font("Georgia", Font.BOLD, 42));
         lblBienvenido.setForeground(MARRON_OSCURO);
-        lblBienvenido.setBounds(40, 30, 580, 50);
+        lblBienvenido.setBounds(40, 30, 860, 50); 
         panelDerecho.add(lblBienvenido);
 
         JLabel lblSubtitulo = new JLabel("Sistema de gestión bibliotecaria");
@@ -336,23 +336,17 @@ public class EstudianteFrame extends JFrame {
         return label;
     }
 
-    /**
-     * CORREGIDO: Ahora carga la imagen 'flecha_derecha.png' de tus recursos en lugar de texto Unicode.
-     */
     private RoundedButton crearBotonFlecha(int x, int y) {
-        RoundedButton btnFlecha = new RoundedButton(""); // Sin texto para que solo se vea el icono
+        RoundedButton btnFlecha = new RoundedButton(""); 
         btnFlecha.setBounds(x, y, 100, 38);
         btnFlecha.setBackground(Color.WHITE);
         btnFlecha.setFocusable(false);
         
         try {
-            // Buscamos la imagen flecha_derecha en la carpeta de recursos
             ImageIcon iconFlecha = new ImageIcon(getClass().getResource("/imagenes/flecha_derecha.png"));
-            // La escalamos a un tamaño elegante para el botón (32 de ancho por 18 de alto)
             Image img = iconFlecha.getImage().getScaledInstance(32, 18, Image.SCALE_SMOOTH);
             btnFlecha.setIcon(new ImageIcon(img));
         } catch (Exception e) {
-            // Si por alguna razón falla la carga, usa un fallback seguro
             btnFlecha.setText("->");
             btnFlecha.setFont(new Font("Arial", Font.BOLD, 18));
             btnFlecha.setForeground(MARRON_OSCURO);

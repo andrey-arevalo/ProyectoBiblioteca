@@ -176,26 +176,21 @@ public class ConsultarEstudiantesFrame extends JFrame {
         // Lógica del botón Validar
         btnValidar.addActionListener(e -> {
             String filtro = txtNombre.getText().trim();
-            if (!filtro.isEmpty()) {
-                consultarEstudiante(filtro);
-            } else {
-                limpiarTodo();
-            }
+            consultarEstudiante(filtro); // Ahora procesa directamente filtros vacíos o con datos
         });
 
         // Lógica del botón Limpiar
         btnLimpiar.addActionListener(e -> limpiarTodo());
 
-        // Al iniciar la pantalla la tabla aparece limpia sin registros previos
-        limpiarTodo();
+        // MODIFICACIÓN PRINCIPAL: Al entrar a la pantalla, carga todos los estudiantes automáticamente
+        consultarEstudiante(""); 
 
         setVisible(true);
     }
 
     private void limpiarTodo() {
         txtNombre.setText("");
-        DefaultTableModel modelo = (DefaultTableModel) tabla.getModel();
-        modelo.setRowCount(0);
+        consultarEstudiante(""); // Restablece la tabla con el listado completo
         txtNombre.requestFocusInWindow();
     }
 
@@ -232,7 +227,8 @@ public class ConsultarEstudiantesFrame extends JFrame {
                 modelo.addRow(new Object[]{id, nombre, carrera, fechaPrestamoStr});
             }
 
-            if (!hayDatos) {
+            // Solo mostramos el aviso si se ingresó un texto de búsqueda y no se encontró nada
+            if (!hayDatos && !nombreFiltro.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "No existen estudiantes registrados con ese nombre.");
             }
 

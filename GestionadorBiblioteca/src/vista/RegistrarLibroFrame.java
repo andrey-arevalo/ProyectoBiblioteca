@@ -256,7 +256,7 @@ public class RegistrarLibroFrame extends JFrame {
                 case "Redes": idCategoria = 3; break;
                 case "Matematicas": idCategoria = 4; break;
                 case "Fisica": idCategoria = 5; break;
-                case "Literature": idCategoria = 6; break;
+                case "Literatura": idCategoria = 6; break;
             }
 
             try {

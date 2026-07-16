@@ -15,6 +15,7 @@ import java.awt.image.BufferedImage;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.text.SimpleDateFormat; // Importado
 
 public class HistorialFrameEstudiante extends JFrame {
 
@@ -135,12 +136,8 @@ public class HistorialFrameEstudiante extends JFrame {
         header.setFont(new Font("Arial", Font.BOLD, 16));
         header.setBorder(BorderFactory.createLineBorder(MARRON_OSCURO, 1));
 
-        // Renderizador para centrar los textos de la tabla
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
-        for (int i = 0; i < tabla.getColumnCount(); i++) {
-            tabla.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
-        }
+        // Aplicar renderizadores y formatos de columna específicos
+        formatearYCentrarColumnas();
 
         // Ajustar anchos específicos de columnas
         tabla.getColumnModel().getColumn(0).setPreferredWidth(120); // ID Libro
@@ -170,6 +167,54 @@ public class HistorialFrameEstudiante extends JFrame {
         setVisible(true);
     }
 
+    private void formatearYCentrarColumnas() {
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+
+        // Renderizador ultra-seguro contra milisegundos y microsegundos
+        DefaultTableCellRenderer renderizadorFecha = new DefaultTableCellRenderer() {
+            private final SimpleDateFormat formateador = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+
+            @Override
+            protected void setValue(Object value) {
+                if (value instanceof java.util.Date) {
+                    setText(formateador.format((java.util.Date) value));
+                } else if (value != null) {
+                    try {
+                        String strValue = value.toString();
+                        // Corta decimales de los milisegundos si vienen en el string
+                        if (strValue.contains(".")) {
+                            strValue = strValue.substring(0, strValue.lastIndexOf("."));
+                        }
+                        java.util.Date fechaAux = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(strValue);
+                        setText(formateador.format(fechaAux));
+                    } catch (Exception e) {
+                        String texto = value.toString();
+                        if (texto.length() > 16) {
+                            setText(texto.substring(0, 16)); 
+                        } else {
+                            setText(texto);
+                        }
+                    }
+                } else {
+                    setText("-");
+                }
+            }
+        };
+        renderizadorFecha.setHorizontalAlignment(SwingConstants.CENTER);
+
+        // Aplicamos a las columnas correspondientes
+        for (int i = 0; i < tabla.getColumnCount(); i++) {
+            if (i == 3) {
+                // Columna 3 es "Fecha de préstamo"
+                tabla.getColumnModel().getColumn(i).setCellRenderer(renderizadorFecha);
+            } else {
+                // Las demás columnas se centran normalmente
+                tabla.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+            }
+        }
+    }
+
     private void cargarHistorial(int idEstudiante) {
         try {
             Connection con = ConexionBD.conectar();
@@ -196,7 +241,7 @@ public class HistorialFrameEstudiante extends JFrame {
                         rs.getInt("id_libro"), 
                         rs.getString("estudiante"),
                         rs.getString("titulo"),
-                        rs.getTimestamp("fecha_prestamo")
+                        rs.getTimestamp("fecha_prestamo") // Obtener como Timestamp para conservar la hora
                 });
             }
 

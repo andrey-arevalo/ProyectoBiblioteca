@@ -97,7 +97,7 @@ public class ReportesFrame extends JFrame {
                 btnVolver.setIcon(new ImageIcon(flipped.getScaledInstance(18, 12, Image.SCALE_SMOOTH)));
             }
         } catch(Exception e) {
-            btnVolver.setText("← Volver");
+            btnVolver.setText(" Volver");
         }
         panel.add(btnVolver);
 
